@@ -103,6 +103,10 @@ class BigQuery(BaseQueryRunner):
                 'userDefinedFunctionResourceUri': {
                     "type": "string",
                     'title': 'UDF Source URIs (i.e. gs://bucket/date_utils.js, gs://bucket/string_utils.js )'
+                },
+                'useStandardSql': {
+                    "type": "boolean",
+                    'title': "Use Standard SQL (Beta)",
                 }
             },
             'required': ['jsonKeyFile', 'projectId'],
@@ -115,6 +119,7 @@ class BigQuery(BaseQueryRunner):
     def _get_bigquery_service(self):
         scope = [
             "https://www.googleapis.com/auth/bigquery",
+	    "https://www.googleapis.com/auth/drive"
             ]
 
         key = json.loads(b64decode(self.configuration['jsonKeyFile']))
@@ -132,6 +137,7 @@ class BigQuery(BaseQueryRunner):
         job_data = {
             "query": query,
             "dryRun": True,
+            "useLegacySql": not self.configuration.get('useStandardSql', False),
         }
         response = jobs.query(projectId=self._get_project_id(), body=job_data).execute()
         return int(response["totalBytesProcessed"])
@@ -142,6 +148,7 @@ class BigQuery(BaseQueryRunner):
             "configuration": {
                 "query": {
                     "query": query,
+                    "useLegacySql": not self.configuration.get('useStandardSql', False),
                 }
             }
         }
